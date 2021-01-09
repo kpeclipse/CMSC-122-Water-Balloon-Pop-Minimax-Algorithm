@@ -6,6 +6,9 @@ import javax.swing.JPanel;
 import java.io.File;
 import javax.imageio.ImageIO;
 import java.io.IOException;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.awt.image.BufferedImage;
 import java.awt.GridLayout;
 import java.awt.Font;
@@ -20,7 +23,10 @@ public class Play extends JPanel implements KeyListener{
     private File file;
     private BufferedImage image;
     private GameImagePanel mainbg;
+
     private Game game;
+//    private Fall fall;
+    private UmbrellaClose umbrella;
 
     private JPanel playerPanel;
     private JPanel highScorePanel;
@@ -28,6 +34,7 @@ public class Play extends JPanel implements KeyListener{
     private JPanel dodgedBalloonsPanel;
     private JPanel gameOverPanel;
     private JPanel choicePanel;
+    private JPanel tubePanel;
 
     private JLabel highScoreLabel; 
     private JLabel scoreLabel;
@@ -37,6 +44,9 @@ public class Play extends JPanel implements KeyListener{
     private JLabel againLabel;
 
     private JLabel[] player = new JLabel[4];
+    private JLabel[] tube = new JLabel[4];
+    private JLabel[] hole = new JLabel[4];
+    private JLabel[] balloon = new JLabel[6];
 
     private int score;
     private int DELTA; // Necessary when changing a particular column
@@ -50,6 +60,8 @@ public class Play extends JPanel implements KeyListener{
         setOpaque(false);
 
         setPanels();
+        setTubes();
+        setBalloons();
         setPlayers();
         setLabels();
 
@@ -92,6 +104,15 @@ public class Play extends JPanel implements KeyListener{
         player[i].setBounds(DELTA, 435, 254, 254);
     }
 
+    public void visibleBalloon(int i){
+        for(int x = 0; x < balloon.length; x++) {
+            if(x == i){
+                balloon[x].setVisible(true);
+            }
+            else balloon[x].setVisible(false);
+        }
+    }
+
     public void clearScore(){
         score = 0;
     }
@@ -121,7 +142,9 @@ public class Play extends JPanel implements KeyListener{
         dodgedBalloonsPanel = panel(dodgedBalloonsPanel, 885, 350, 265, 75, new GridLayout(1,1));
         gameOverPanel = panel(gameOverPanel, 85, 265, 800, 75, new GridLayout(1,1));
         choicePanel = panel(choicePanel, 85, 375, 800, 50, new GridLayout(2,1));
+        tubePanel = panel(playerPanel, 115, 0, 655, 75, null);
 
+        add(tubePanel);
         add(playerPanel);
         add(highScorePanel);
         add(scorePanel);
@@ -176,6 +199,32 @@ public class Play extends JPanel implements KeyListener{
             playerPanel.add(player[i]);
     }
 
+    public void setTubes(){
+        for(int i = 0, x = 0; i < tube.length; i++){
+            tube[i] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/Tube.png"));
+            tube[i].setBounds(x, 0, 129, 75);
+
+            hole[i] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/Hole.png"));
+            hole[i].setBounds(x + 115, 45, 129, 75);
+            
+            tubePanel.add(tube[i]);
+            add(hole[i]);
+            x = x + 175;
+        }
+    }
+
+    public void setBalloons(){
+        balloon[0] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/RED BALLOON.png"));
+        balloon[1] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/SHINY BALLOON.png"));
+        balloon[2] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/BLACK BALLOON.png"));
+        balloon[3] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/Red Pop.png"));
+        balloon[4] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/Shiny Pop.png"));
+        balloon[5] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/Black Pop.png"));
+
+        for(int i = 0; i < balloon.length; i++)
+            playerPanel.add(balloon[i]);
+    }
+
     // Setting up a player
     public JLabel playerLabel(JLabel theLabel, String filename) {
         theLabel = new JLabel(new ImageIcon(filename));
@@ -189,7 +238,6 @@ public class Play extends JPanel implements KeyListener{
 		} catch (FontFormatException | IOException e) {e.printStackTrace();}
 		return null;
     }
-
 
     // WHERE THE ACTION BEGINS!!
     @Override
@@ -238,7 +286,9 @@ public class Play extends JPanel implements KeyListener{
         if (e.getKeyCode() == KeyEvent.VK_SPACE && gameOver == false) {
             while(hold == false) {
                 visiblePlayer(1);
-				hold = true;
+                umbrella = new UmbrellaClose();
+                umbrella.start();
+                hold = true;
             }
         }
 
@@ -251,9 +301,63 @@ public class Play extends JPanel implements KeyListener{
 	@Override
 	public void keyReleased(KeyEvent e) {
         if(e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_LEFT)
-			hold = false;
+            hold = false;
     }
 
 	@Override
-	public void keyTyped(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {}
+
+    public void Collide(){
+
+    }
+    
+    /**
+     * INNER CLASS
+     */
+
+    /**
+     * FAILED FALL CLASS WILL WORK ON THIS LATER
+     * class Fall extends Thread {
+        int[] column = {160, 335, 510, 685};
+        int columnIndex;
+        int balloonIndex;
+        int fallDELTA = 0;
+
+        public Fall(){
+            Random randomBalloon = new Random();
+            balloonIndex = randomBalloon.nextInt(3);
+            visibleBalloon(balloonIndex);
+    
+            Random randomColumn = new Random();
+            columnIndex = randomColumn.nextInt(4);
+        }
+
+        @Override
+        public void run() {
+            while(gameOver == false){
+                try{
+                    balloon[balloonIndex].setBounds(column[columnIndex], fallDELTA, 61, 90);
+                    fallDELTA = fallDELTA + 3;
+                    Thread.sleep(9);
+//                    balloon[balloonIndex].setBounds(column[columnIndex], fallDELTA, 61, 90);    
+                } catch (Exception e){e.printStackTrace();}
+            }
+        }
+    }
+     */
+
+    class UmbrellaClose extends Thread {
+		private boolean running = false;
+
+		@Override
+		public void run() {
+		    do {
+			    try {
+	    			Thread.sleep(125);
+                    visiblePlayer(0);
+                    running = true;
+                } catch (Exception ex) { ex.printStackTrace(); }
+            }while(running == false);
+		}
+    }
 }
