@@ -25,7 +25,7 @@ public class Play extends JPanel implements KeyListener{
     private GameImagePanel mainbg;
 
     private Game game;
-//    private Fall fall;
+    private Fall fall;
     private UmbrellaClose umbrella;
 
     private JPanel playerPanel;
@@ -49,6 +49,7 @@ public class Play extends JPanel implements KeyListener{
     private JLabel[] balloon = new JLabel[6];
 
     private int score;
+    private int drops = 0;
     private int DELTA; // Necessary when changing a particular column
 
     private boolean hold; // Necessary to avoid holding of key
@@ -84,7 +85,41 @@ public class Play extends JPanel implements KeyListener{
         hold = false;
         DELTA = 400;
         visiblePlayer(0);
+
+        Start();
     }
+
+    public void Start() {
+
+		TimerTask task = new TimerTask() {
+			public void run() {
+				if (gameOver == false) {
+					BeforeFall(1);
+
+					if(drops >= 10)
+						BeforeFall(2);
+	
+					else if(drops >= 20) {
+                        BeforeFall(3);
+                        
+						try {
+							BeforeFall(4);
+
+							Thread.sleep(1000);
+						} catch(Exception e) {e.printStackTrace();}
+					}
+                }
+                
+                drops++;
+			}
+		};
+
+		Timer timer = new Timer("Timer");
+
+		long delay = 100L;
+		long period = 100L;
+		timer.scheduleAtFixedRate(task, delay, period);
+	}
 
     public void isGameOver(boolean state){
         gameOver = state;
@@ -239,6 +274,35 @@ public class Play extends JPanel implements KeyListener{
 		return null;
     }
 
+    public void BeforeFall(int i) {
+		try {
+            Random r = new Random();
+            int index = r.nextInt(4);   // to determine which column the balloon will fall
+            
+			switch(i){
+                // Red Balloon will fall
+				case 1: 
+				case 2: 
+                    fall = new Fall(0, index);
+                    break;
+                
+                case 3: {
+                    fall = new Fall(1, index);
+                    break;
+                }
+
+                case 4: {
+                    fall = new Fall(2, index);
+                    break;
+                }
+            }
+            
+            fall.start();
+
+			Thread.sleep(1000);
+		} catch(Exception e){e.printStackTrace();}
+	}
+
     // WHERE THE ACTION BEGINS!!
     @Override
 	public void keyPressed(KeyEvent e) {
@@ -306,45 +370,50 @@ public class Play extends JPanel implements KeyListener{
 
 	@Override
     public void keyTyped(KeyEvent e) {}
-
-    public void Collide(){
-
-    }
     
     /**
      * INNER CLASS
      */
 
-    /**
-     * FAILED FALL CLASS WILL WORK ON THIS LATER
-     * class Fall extends Thread {
+    // FAILED FALL CLASS WILL WORK ON THIS LATER
+    class Fall extends Thread {
         int[] column = {160, 335, 510, 685};
         int columnIndex;
         int balloonIndex;
-        int fallDELTA = 0;
+        int time = 1;
+        int freeFall = 0;
 
-        public Fall(){
-            Random randomBalloon = new Random();
-            balloonIndex = randomBalloon.nextInt(3);
-            visibleBalloon(balloonIndex);
-    
-            Random randomColumn = new Random();
-            columnIndex = randomColumn.nextInt(4);
+        boolean flag = true;
+
+        public Fall (int balloonIndex, int columnIndex) {
+            this.columnIndex = columnIndex;
+            this.balloonIndex = balloonIndex;
         }
 
         @Override
         public void run() {
-            while(gameOver == false){
-                try{
-                    balloon[balloonIndex].setBounds(column[columnIndex], fallDELTA, 61, 90);
-                    fallDELTA = fallDELTA + 3;
-                    Thread.sleep(9);
-//                    balloon[balloonIndex].setBounds(column[columnIndex], fallDELTA, 61, 90);    
-                } catch (Exception e){e.printStackTrace();}
+            while(gameOver == false && flag == true) {
+                try {
+                    visibleBalloon(balloonIndex);
+                    balloon[balloonIndex].setBounds(column[columnIndex], freeFall, 61, 90);
+                    balloon[balloonIndex + 3].setBounds(column[columnIndex], freeFall, 61, 90);
+                    
+                    Thread.sleep(15);
+
+                    freeFall += 1 * time;
+                    if(time < 30){
+                        time += 1;
+                    }
+                    
+                    if (freeFall > 815) {
+                        flag = false;
+                        freeFall = 180;
+                        time = 1;
+                    }
+                } catch (Exception e) { e.printStackTrace(); }
             }
         }
     }
-     */
 
     class UmbrellaClose extends Thread {
 		private boolean running = false;
