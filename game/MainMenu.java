@@ -1,7 +1,10 @@
 package game;
 
+import settings.HighScore;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.io.File;
 import javax.imageio.ImageIO;
@@ -12,12 +15,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.Color;
 
 public class MainMenu extends JPanel {
     private File file;
     private BufferedImage image;
+
     private GameImagePanel mainbg;
     private Game game;
+    private HighScore highScore;
 
     private JButton playButton;
     private JButton howToPlayButton;
@@ -28,12 +36,31 @@ public class MainMenu extends JPanel {
         setSize(width, height);
         setLayout(null);
         setOpaque(false);
-
+        
+        showHighScore();
         setButtons();
         setBackground(System.getProperty("user.dir") + "/graphics/Main.png");
 
         game =  g;
         setActionAndMouseListeners();
+    }
+
+    public void showHighScore(){
+        highScore = new HighScore();
+        int currentHighScore = highScore.showHighScore();
+
+        JPanel highscorePanel = new JPanel();
+        highscorePanel.setBounds(670, 335, 350, 50);
+        highscorePanel.setOpaque(false);
+        add(highscorePanel);
+
+        JLabel highScoreLabel = new JLabel("High Score: " + Integer.toString(currentHighScore));
+        highScoreLabel.setLocation(0, 0);
+        highScoreLabel.setSize(220, 50);
+        highScoreLabel.setFont(useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 10));
+        highScoreLabel.setForeground(Color.ORANGE);
+//        highscoreLabel.setHorizontalAlignment(JTextField.CENTER);
+        highscorePanel.add(highScoreLabel);
     }
 
     public JButton button(JButton theButton, ImageIcon icon) {
@@ -72,6 +99,14 @@ public class MainMenu extends JPanel {
         add(howToPlayButton);
         add(creditsButton);
         add(exitButton);
+    }
+
+    // What font to use
+    public Font useFont(String path, int size){
+        try {
+			return Font.createFont(Font.TRUETYPE_FONT, new File(path)).deriveFont(Font.PLAIN, size);
+		} catch (FontFormatException | IOException e) {e.printStackTrace();}
+		return null;
     }
 
     public void setActionAndMouseListeners(){

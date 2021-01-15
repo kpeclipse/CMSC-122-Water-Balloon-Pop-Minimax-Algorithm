@@ -5,6 +5,7 @@ import java.awt.CardLayout;
 
 public class Game extends JFrame{
     protected static int width = 1200, height = 725;
+    
     private MainMenu mainMenu;
     private HowToPlay howToPlay;
     private Credits credits;

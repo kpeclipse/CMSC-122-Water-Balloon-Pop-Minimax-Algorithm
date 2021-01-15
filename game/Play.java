@@ -1,5 +1,7 @@
 package game;
 
+import settings.HighScore;
+
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -20,6 +22,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class Play extends JPanel implements KeyListener{
+    // So many global variables :<
     private File file;
     private BufferedImage image;
     private GameImagePanel mainbg;
@@ -27,6 +30,7 @@ public class Play extends JPanel implements KeyListener{
     private Game game;
     private Fall fall;
     private UmbrellaClose umbrella;
+    private HighScore highScore;
 
     private JPanel playerPanel;
     private JPanel highScorePanel;
@@ -49,12 +53,17 @@ public class Play extends JPanel implements KeyListener{
     private JLabel[] balloon = new JLabel[6];
 
     private int score;
-    private int drops = 0;
+    private int drops;
+    private int dodgedBalloons;
     private int DELTA; // Necessary when changing a particular column
 
     private boolean hold; // Necessary to avoid holding of key
+    private boolean hitByBalloon;
+    private boolean hitByRock;
+    private boolean dodgeLimit;
     private boolean gameOver;
 
+    // Constructor
     public Play(int width, int height, Game g){
         setSize(width, height);
         setLayout(null);
@@ -75,56 +84,66 @@ public class Play extends JPanel implements KeyListener{
     // Game starts
     public void initial(){
         // score
-        clearScore();
-        updateScore();
+        updateScore(4); // any number can be used except for 0, 1, and 2 since these numbers determine the kind of balloon
 
         // if game is not over yet
         isGameOver(false);
+        hitByBalloon = false;
+        hitByBalloon = false;
+        dodgeLimit = false;
 
         // player in certain position
         hold = false;
         DELTA = 400;
+        drops = 1;
         visiblePlayer(0);
 
         Start();
     }
 
+    // Starts the falling of Balloons
     public void Start() {
-
-		TimerTask task = new TimerTask() {
-			public void run() {
-				if (gameOver == false) {
-					BeforeFall(1);
-
-					if(drops >= 10)
-						BeforeFall(2);
-	
-					else if(drops >= 20) {
-                        BeforeFall(3);
-                        
-						try {
-							BeforeFall(4);
-
-							Thread.sleep(1000);
-						} catch(Exception e) {e.printStackTrace();}
-					}
+        Timer timer = new Timer("Timer");
+        
+        if(gameOver == false){
+            TimerTask task = new TimerTask() {
+                public void run() {
+                   if(drops <= 10){
+                        BeforeFall(0);
+                    }
+    
+                    else {
+                        Random r = new Random();
+                        int randomColor = r.nextInt(3);
+                        BeforeFall(randomColor);
+                    }
+    
+                    drops += 1;
+                    // System.out.println("drops = " + drops);
                 }
-                
-                drops++;
-			}
-		};
-
-		Timer timer = new Timer("Timer");
-
-		long delay = 100L;
-		long period = 100L;
-		timer.scheduleAtFixedRate(task, delay, period);
+            };
+    
+            long delay = 100L;
+            long period = 1000L;
+            
+            timer.scheduleAtFixedRate(task, delay, period);
+        }
 	}
 
+    // this sets whether the game is over or not
     public void isGameOver(boolean state){
         gameOver = state;
+
+        if(hitByRock == true || dodgeLimit == true)
+            visiblePlayer(3);
+        if(hitByBalloon == true)
+            visiblePlayer(2);
+
         gameOverPanel.setVisible(state);
         choicePanel.setVisible(state);
+
+        if(score > Integer.parseInt(highScoreLabel.getText()))
+            highScore.updateHighScore(score);
     }
 
     // Which character shows up
@@ -139,6 +158,7 @@ public class Play extends JPanel implements KeyListener{
         player[i].setBounds(DELTA, 435, 254, 254);
     }
 
+    // Which balloon shows up
     public void visibleBalloon(int i){
         for(int x = 0; x < balloon.length; x++) {
             if(x == i){
@@ -148,12 +168,49 @@ public class Play extends JPanel implements KeyListener{
         }
     }
 
-    public void clearScore(){
-        score = 0;
+    // Updates score when balloon is popped
+    public void updateScore(int color){
+        switch(color){
+            case 0: // RED
+                score += 10;
+                break;
+            case 1: // SHINY
+                score += 30;
+                break;
+            case 2: // BLACK
+                score += 20;
+                break;
+        }
+
+        scoreLabel.setText(Integer.toString(score));
     }
 
-    public void updateScore(){
+    // Deduct score when black balloon is dodged
+    public void deductScore(){
+        score -= 5;
         scoreLabel.setText(Integer.toString(score));
+    }
+
+    public void showHighScore(){
+        highScore = new HighScore();
+        int hScore = highScore.showHighScore();
+        highScoreLabel.setText(Integer.toString(hScore));
+    }
+    
+    // Updates how many balloons were dodged
+    public void updateDodgedBalloons(){
+        dodgedBalloonsLabel.setText(Integer.toString(dodgedBalloons));
+        switch(dodgedBalloons){
+            case 4:
+                dodgedBalloonsLabel.setForeground(Color.ORANGE);
+                break;
+            case 5:
+                dodgedBalloonsLabel.setForeground(Color.RED);
+                break;
+            default:
+                dodgedBalloonsLabel.setForeground(Color.WHITE);
+                break;
+        }
     }
     
     // Play Wallpaper
@@ -179,13 +236,13 @@ public class Play extends JPanel implements KeyListener{
         choicePanel = panel(choicePanel, 85, 375, 800, 50, new GridLayout(2,1));
         tubePanel = panel(playerPanel, 115, 0, 655, 75, null);
 
+        add(gameOverPanel);
+        add(choicePanel);
         add(tubePanel);
         add(playerPanel);
         add(highScorePanel);
         add(scorePanel);
         add(dodgedBalloonsPanel);
-        add(gameOverPanel);
-        add(choicePanel);
     }
     
     // setting up a panel
@@ -199,12 +256,14 @@ public class Play extends JPanel implements KeyListener{
 
     // Everything with JLabel
     public void setLabels(){
-        highScoreLabel = label(highScoreLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 40), Color.WHITE, "BLABLA");
+        highScoreLabel = label(highScoreLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 40), Color.WHITE, null);
         scoreLabel = label(scoreLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 40), Color.WHITE, Integer.toString(score));
         dodgedBalloonsLabel = label(dodgedBalloonsLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 40), Color.WHITE, "0");
         gameOverLabel = label(gameOverLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 60), Color.ORANGE, "GAME OVER!");
         exitLabel = label(exitLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 20), Color.WHITE, "(Press ESC to exit)");
         againLabel = label(againLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 20), Color.WHITE, "(Press ENTER to play again)");
+
+        showHighScore();
 
         scorePanel.add(scoreLabel);
         highScorePanel.add(highScoreLabel);
@@ -234,6 +293,7 @@ public class Play extends JPanel implements KeyListener{
             playerPanel.add(player[i]);
     }
 
+    // Everything with Tubes Settings
     public void setTubes(){
         for(int i = 0, x = 0; i < tube.length; i++){
             tube[i] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/Tube.png"));
@@ -248,6 +308,7 @@ public class Play extends JPanel implements KeyListener{
         }
     }
 
+    // Everything with Balloon Settings
     public void setBalloons(){
         balloon[0] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/RED BALLOON.png"));
         balloon[1] = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/SHINY BALLOON.png"));
@@ -274,6 +335,7 @@ public class Play extends JPanel implements KeyListener{
 		return null;
     }
 
+    // Settings before a fall happens
     public void BeforeFall(int i) {
 		try {
             Random r = new Random();
@@ -281,25 +343,20 @@ public class Play extends JPanel implements KeyListener{
             
 			switch(i){
                 // Red Balloon will fall
-				case 1: 
-				case 2: 
+                case 0: 
                     fall = new Fall(0, index);
                     break;
-                
-                case 3: {
+                case 1:
                     fall = new Fall(1, index);
                     break;
-                }
-
-                case 4: {
+                case 2: 
                     fall = new Fall(2, index);
                     break;
-                }
             }
             
             fall.start();
 
-			Thread.sleep(1000);
+			Thread.sleep(1500);
 		} catch(Exception e){e.printStackTrace();}
 	}
 
@@ -310,12 +367,14 @@ public class Play extends JPanel implements KeyListener{
 
         // If player wishes to leave to Main Menu when the game is over
         if (e.getKeyCode() == KeyEvent.VK_ESCAPE && gameOver == true) {
+            game.initial();
             game.showCard("main");
         }
 
         // If player wishes to play again when the game is over
         if (e.getKeyCode() == KeyEvent.VK_ENTER && gameOver == true) {
-            initial();
+            game.initial();
+            game.showCard("play");
         }
 
         // If player wishes to move left while playing
@@ -358,12 +417,14 @@ public class Play extends JPanel implements KeyListener{
 
         // If player wants to end the game
         if (e.getKeyCode() ==  KeyEvent.VK_END) {
+            dodgeLimit = true;
             isGameOver(true);
         }
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
+        // restarts hold
         if(e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_LEFT)
             hold = false;
     }
@@ -375,19 +436,20 @@ public class Play extends JPanel implements KeyListener{
      * INNER CLASS
      */
 
-    // FAILED FALL CLASS WILL WORK ON THIS LATER
+    // Everything that happens in a falling balloon
     class Fall extends Thread {
         int[] column = {160, 335, 510, 685};
         int columnIndex;
-        int balloonIndex;
-        int time = 1;
+        int balloonIndex = 1;
+        int time = 5;
         int freeFall = 0;
 
+        boolean popped = false;
         boolean flag = true;
 
         public Fall (int balloonIndex, int columnIndex) {
-            this.columnIndex = columnIndex;
             this.balloonIndex = balloonIndex;
+            this.columnIndex = columnIndex;
         }
 
         @Override
@@ -398,23 +460,54 @@ public class Play extends JPanel implements KeyListener{
                     balloon[balloonIndex].setBounds(column[columnIndex], freeFall, 61, 90);
                     balloon[balloonIndex + 3].setBounds(column[columnIndex], freeFall, 61, 90);
                     
-                    Thread.sleep(15);
-
+                    // THE PHYSICS IN THE FALLING BALLOON YESSSS
+                    Thread.sleep(20);
                     freeFall += 1 * time;
                     if(time < 30){
                         time += 1;
                     }
-                    
-                    if (freeFall > 815) {
+
+                    // If balloon was popped by the player or was dodged
+                    if ((balloon[balloonIndex].getBounds().intersects(player[1].getBounds()) && player[1].isVisible()) || freeFall > 605) {
+                        visibleBalloon(balloonIndex + 3);
+                        // If the balloon was popped
+                        if(freeFall < 605)
+                            updateScore(balloonIndex);
+
+                        // If the balloon was dodged
+                        else{
+                            // If dodge limit is not yet reached
+                            if(dodgedBalloons < 5) {
+                                dodgedBalloons += 1;
+                                updateDodgedBalloons();
+
+                                if(balloonIndex == 2) // If it was a black balloon
+                                    deductScore();
+                            }
+
+                            // If dodge limit has been reached
+                            else {
+                                dodgeLimit = true;
+                                isGameOver(true);
+                            }
+                        }
+
                         flag = false;
-                        freeFall = 180;
-                        time = 1;
                     }
+
+                    // If the player was hit by a balloon
+                    else if((balloon[balloonIndex].getBounds().intersects(player[0].getBounds()) && balloon[balloonIndex].getY() > 425 && player[0].isVisible())){
+                        visibleBalloon(balloonIndex + 3);
+                        hitByBalloon = true;
+                        isGameOver(true);
+                    }
+                    
                 } catch (Exception e) { e.printStackTrace(); }
             }
         }
     }
 
+    // This is to stop the umbrella being open while holding the SPACE KEY
     class UmbrellaClose extends Thread {
 		private boolean running = false;
 
