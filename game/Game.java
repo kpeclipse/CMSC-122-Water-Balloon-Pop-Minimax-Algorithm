@@ -1,7 +1,7 @@
 package game;
 
-import javax.swing.JFrame;
 import java.awt.CardLayout;
+import javax.swing.JFrame;
 
 public class Game extends JFrame{
     protected static int width = 1200, height = 725;

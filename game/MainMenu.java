@@ -2,22 +2,23 @@ package game;
 
 import settings.HighScore;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import java.io.File;
-import javax.imageio.ImageIO;
-import java.io.IOException;
-import java.awt.image.BufferedImage;
-import javax.swing.BorderFactory;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
-import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.Color;
 
 public class MainMenu extends JPanel {
     private File file;

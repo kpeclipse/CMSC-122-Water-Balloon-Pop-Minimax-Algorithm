@@ -1,13 +1,14 @@
 package game;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import java.io.File;
-import javax.imageio.ImageIO;
-import java.io.IOException;
-import java.awt.image.BufferedImage;
-import javax.swing.BorderFactory;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseListener;

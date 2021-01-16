@@ -2,21 +2,21 @@ package game;
 
 import settings.HighScore;
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import java.awt.image.BufferedImage;
+import java.awt.GridLayout;
+import java.awt.Font;
+import java.awt.Color;
+import java.awt.FontFormatException;
 import java.io.File;
-import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.awt.image.BufferedImage;
-import java.awt.GridLayout;
-import java.awt.Font;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import java.awt.Color;
-import java.awt.FontFormatException;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
