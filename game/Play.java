@@ -29,6 +29,7 @@ public class Play extends JPanel implements KeyListener{
 
     private Game game;
     private Fall fall;
+    private MiniMax miniMax;
     private UmbrellaClose umbrella;
     private HighScore highScore;
 
@@ -47,6 +48,8 @@ public class Play extends JPanel implements KeyListener{
     private JLabel exitLabel; 
     private JLabel againLabel;
 
+    private JLabel villain;
+    private JLabel rock;
     private JLabel[] player = new JLabel[4];
     private JLabel[] tube = new JLabel[4];
     private JLabel[] hole = new JLabel[4];
@@ -59,8 +62,6 @@ public class Play extends JPanel implements KeyListener{
 
     private boolean hold; // Necessary to avoid holding of key
     private boolean hitByBalloon;
-    private boolean hitByRock;
-    private boolean dodgeLimit;
     private boolean gameOver;
 
     // Constructor
@@ -69,6 +70,7 @@ public class Play extends JPanel implements KeyListener{
         setLayout(null);
         setOpaque(false);
 
+        setVillain();
         setPanels();
         setTubes();
         setBalloons();
@@ -89,8 +91,6 @@ public class Play extends JPanel implements KeyListener{
         // if game is not over yet
         isGameOver(false);
         hitByBalloon = false;
-        hitByBalloon = false;
-        dodgeLimit = false;
 
         // player in certain position
         hold = false;
@@ -108,13 +108,16 @@ public class Play extends JPanel implements KeyListener{
         if(gameOver == false){
             TimerTask task = new TimerTask() {
                 public void run() {
-                   if(drops <= 10){
+                    if(drops <= 10) {
                         BeforeFall(0);
                     }
     
-                    else {
+                    else {                    
+                        BeforeVillainFall();
+                        
                         Random r = new Random();
                         int randomColor = r.nextInt(3);
+
                         BeforeFall(randomColor);
                     }
     
@@ -134,10 +137,9 @@ public class Play extends JPanel implements KeyListener{
     public void isGameOver(boolean state){
         gameOver = state;
 
-        if(hitByRock == true || dodgeLimit == true)
-            visiblePlayer(3);
         if(hitByBalloon == true)
             visiblePlayer(2);
+        else visiblePlayer(3);
 
         gameOverPanel.setVisible(state);
         choicePanel.setVisible(state);
@@ -243,6 +245,8 @@ public class Play extends JPanel implements KeyListener{
         add(highScorePanel);
         add(scorePanel);
         add(dodgedBalloonsPanel);
+
+        playerPanel.add(rock); // Rock is only placed
     }
     
     // setting up a panel
@@ -280,6 +284,14 @@ public class Play extends JPanel implements KeyListener{
         theLabel.setForeground(color);
         theLabel.setHorizontalAlignment(SwingConstants.CENTER);
         return theLabel;
+    }
+
+    // Everything involved with the opponent
+    public void setVillain(){
+        villain = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/AI.png"));
+        rock = new JLabel(new ImageIcon(System.getProperty("user.dir") + "/graphics/rock.png"));
+
+        add(villain);
     }
 
     // Everything with Player Settings
@@ -335,13 +347,21 @@ public class Play extends JPanel implements KeyListener{
 		return null;
     }
 
+    public void BeforeVillainFall(){
+        try{
+            miniMax = new MiniMax("opponent");
+            miniMax.start();
+            Thread.sleep(800);
+        } catch (Exception e) {};
+    }
+
     // Settings before a fall happens
     public void BeforeFall(int i) {
 		try {
             Random r = new Random();
             int index = r.nextInt(4);   // to determine which column the balloon will fall
             
-			switch(i){
+            switch(i){
                 // Red Balloon will fall
                 case 0: 
                     fall = new Fall(0, index);
@@ -356,7 +376,7 @@ public class Play extends JPanel implements KeyListener{
             
             fall.start();
 
-			Thread.sleep(1500);
+            Thread.sleep(1000);;
 		} catch(Exception e){e.printStackTrace();}
 	}
 
@@ -416,10 +436,8 @@ public class Play extends JPanel implements KeyListener{
         }
 
         // If player wants to end the game
-        if (e.getKeyCode() ==  KeyEvent.VK_END) {
-            dodgeLimit = true;
+        if (e.getKeyCode() ==  KeyEvent.VK_END)
             isGameOver(true);
-        }
 	}
 
 	@Override
@@ -486,10 +504,7 @@ public class Play extends JPanel implements KeyListener{
                             }
 
                             // If dodge limit has been reached
-                            else {
-                                dodgeLimit = true;
-                                isGameOver(true);
-                            }
+                            else isGameOver(true);
                         }
 
                         flag = false;
@@ -507,6 +522,81 @@ public class Play extends JPanel implements KeyListener{
         }
     }
 
+    class MiniMax extends Thread{
+        int[] playerColumns = {50, 225, 400, 575};
+        int[] balloonColumns = {160, 335, 510, 685};
+        int time = 5;
+        int freeFall = 170;
+
+        String turn;
+        boolean flag = true;
+
+        public MiniMax(String turn) {
+            this.turn = turn;
+        }
+
+        @Override
+        public void run() {
+            if(turn == "opponent") {
+                int location = getMin();
+
+                while (gameOver == false && flag == true){
+                    villain.setBounds(playerColumns[location], 0, 250, 250);
+                    try {
+                        rock.setBounds(balloonColumns[location], freeFall, 45, 45);
+                        Thread.sleep(30);
+                        // THE PHYSICS IN THE FALLING ROCK
+                        freeFall += 2 * time;
+                        if(time < 30){
+                            time += 1;
+                        }
+
+                        // if rock hits player regardless the open umbrella or not
+                        if((rock.getBounds().intersects(player[0].getBounds()) && rock.getY() > 465))
+                            isGameOver(true);
+    
+                        if(freeFall > 750)
+                            flag = false;
+                    } catch (Exception e) {}
+                }
+            }
+        }
+
+        // Minimum always considers the current player's location
+        public int getMin(){
+            int current = player[0].getX();
+
+            for(int i = 0; i < 4; i++){
+                if(playerColumns[i] == current)
+                    return i;
+            }
+
+            return 0;
+        }
+
+        // Maximum always considers the opponent's position
+        public int getMax(){
+            Random r = new Random();
+        
+            int current = rock.getX();
+            int exclude = 0;
+            int random;
+
+            for(int i = 0; i < 4; i++){
+                if(balloonColumns[i] == current){
+                    exclude = i;
+                    break;
+                }
+            }
+
+            do {
+                random = r.nextInt(4); // Basically any column without the falling rock is considered the maximum value
+            } while (random == exclude);
+
+            return playerColumns[random];
+        }
+    }
+    
     // This is to stop the umbrella being open while holding the SPACE KEY
     class UmbrellaClose extends Thread {
 		private boolean running = false;
@@ -515,8 +605,11 @@ public class Play extends JPanel implements KeyListener{
 		public void run() {
 		    do {
 			    try {
-	    			Thread.sleep(125);
+                    Thread.sleep(150);
                     visiblePlayer(0);
+
+                    if(gameOver == true)
+                        visiblePlayer(3);
                     running = true;
                 } catch (Exception ex) { ex.printStackTrace(); }
             }while(running == false);
