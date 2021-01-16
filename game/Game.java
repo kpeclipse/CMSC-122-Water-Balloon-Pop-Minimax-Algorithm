@@ -47,7 +47,7 @@ public class Game extends JFrame{
         
         // For the Key Listener in the Play panel to work
         if(card == "play") {
-            play.requestFocusInWindow();
+            play.requestFocusInWindow(); // This is for the Key Listener to work
             play.initial();
         }
 	}
