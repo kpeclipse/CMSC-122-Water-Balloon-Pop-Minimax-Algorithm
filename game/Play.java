@@ -162,11 +162,19 @@ public class Play extends JPanel implements KeyListener{
 
     // Which balloon shows up
     public void visibleBalloon(int i){
-        for(int x = 0; x < balloon.length; x++) {
-            if(x == i){
-                balloon[x].setVisible(true);
+        // No balloon shall be visible
+        if(i >= balloon.length || i < 0){
+            for(int x = 0; x < balloon.length; x++)
+                balloon[x].setVisible(false);
+        }
+
+        else {
+            for(int x = 0; x < balloon.length; x++) {
+                if(x == i){
+                    balloon[x].setVisible(true);
+                }
+                else balloon[x].setVisible(false);
             }
-            else balloon[x].setVisible(false);
         }
     }
 
@@ -350,6 +358,7 @@ public class Play extends JPanel implements KeyListener{
     public void BeforeVillainFall(){
         try{
             miniMax = new MiniMax("opponent");
+            visibleBalloon(-1);
             miniMax.start();
             Thread.sleep(800);
         } catch (Exception e) {};
