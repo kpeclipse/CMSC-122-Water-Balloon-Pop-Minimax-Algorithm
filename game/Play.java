@@ -150,6 +150,9 @@ public class Play extends JPanel implements KeyListener{
 
         if(score > Integer.parseInt(highScoreLabel.getText()))
             highScore.updateHighScore(score);
+
+        if(state == true)
+            soundcry.start();
     }
 
     // Which character shows up
@@ -501,10 +504,10 @@ public class Play extends JPanel implements KeyListener{
                     // If balloon was popped by the player or was dodged
                     if ((balloon[balloonIndex].getBounds().intersects(player[1].getBounds()) && player[1].isVisible()) || freeFall > 605) {
                         visibleBalloon(balloonIndex + 3);
+                        soundpop.start();
                         // If the balloon was popped
                         if(freeFall < 605){
                             updateScore(balloonIndex);
-                            soundpop.start();
                         }
 
                         // If the balloon was dodged
@@ -519,10 +522,8 @@ public class Play extends JPanel implements KeyListener{
                             }
 
                             // If dodge limit has been reached
-                            else{
+                            else
                                 isGameOver(true);
-                                soundcry.start();
-                            }
                         }
 
                         flag = false;

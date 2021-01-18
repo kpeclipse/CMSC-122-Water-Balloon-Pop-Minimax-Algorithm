@@ -5,7 +5,7 @@ import java.net.URL;
 import javax.sound.sampled.*;
 
 public class SoundClip{
-	private URL url;
+	//private URL url;
 	private Clip clip;
 	private final String filename;
 	private final int identifier;
@@ -42,16 +42,19 @@ public class SoundClip{
 
 	public void start(){
 		try{
-			url = this.getClass().getClassLoader().getResource(filename);
-			final AudioInputStream audioIn = AudioSystem.getAudioInputStream(url);
+			AudioInputStream audioIn = AudioSystem.getAudioInputStream(new File(filename));
 			clip = AudioSystem.getClip();
 			clip.open(audioIn);
 
-			if(identifier == 0)
-			clip.loop(Clip.LOOP_CONTINUOUSLY);
+			switch(identifier){
+				case 0:
+					clip.loop(Clip.LOOP_CONTINUOUSLY);
+					break;
+				case 1:
+					clip.start();
+					break;
+			}
 
-			if(identifier == 1)
-			clip.start();
 		}catch (final UnsupportedAudioFileException e) {
 			e.printStackTrace();
 		}catch (final IOException e) {
