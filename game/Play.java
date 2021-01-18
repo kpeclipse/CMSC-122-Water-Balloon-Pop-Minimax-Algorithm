@@ -65,6 +65,7 @@ public class Play extends JPanel implements KeyListener{
     private boolean hitByBalloon;
     private boolean gameOver;
 
+    private SoundClip sound = new SoundClip(System.getProperty("user.dir") + "/resources/Play BG Music.wav", 0);
     private SoundClip soundpop = new SoundClip(System.getProperty("user.dir") + "/resources/Balloon Pop.wav", 1);
     private SoundClip soundcry = new SoundClip(System.getProperty("user.dir") + "/resources/Game Over Cry.wav", 1);
 
@@ -102,6 +103,7 @@ public class Play extends JPanel implements KeyListener{
         drops = 1;
         visiblePlayer(0);
 
+        sound.start();
         Start();
     }
 
@@ -151,8 +153,10 @@ public class Play extends JPanel implements KeyListener{
         if(score > Integer.parseInt(highScoreLabel.getText()))
             highScore.updateHighScore(score);
 
-        if(state == true)
+        if(state == true){
             soundcry.start();
+            sound.stop();
+        }
     }
 
     // Which character shows up

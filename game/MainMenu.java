@@ -1,6 +1,7 @@
 package game;
 
 import settings.HighScore;
+import settings.SoundClip;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -32,6 +33,10 @@ public class MainMenu extends JPanel {
     private JButton howToPlayButton;
     private JButton creditsButton;
     private JButton exitButton;
+    private JButton musicButton;
+    private JButton sfxButton;
+
+    private SoundClip soundmain = new SoundClip(System.getProperty("user.dir") + "/resources/Main BG Music.wav", 0);
 
     public MainMenu(int width, int height, Game g){
         setSize(width, height);
@@ -42,6 +47,7 @@ public class MainMenu extends JPanel {
         setButtons();
         setBackground(System.getProperty("user.dir") + "/graphics/Main.png");
 
+        soundmain.start();
         game =  g;
         setActionAndMouseListeners();
     }
@@ -90,16 +96,22 @@ public class MainMenu extends JPanel {
         howToPlayButton = button(howToPlayButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/how1.png"));
         creditsButton = button(creditsButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/credits1.png"));
         exitButton = button(exitButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/exit1.png"));
+        musicButton = button(musicButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/music1.png"));
+        sfxButton = button(sfxButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/sfx1.png"));
 
         playButton.setBounds(670, 380, 350, 50);
         howToPlayButton.setBounds(670, 430, 350, 50);
         creditsButton.setBounds(670, 480, 350, 50);
         exitButton.setBounds(670, 530, 350, 50);
+        musicButton.setBounds(1000,600,80,80);
+        sfxButton.setBounds(1090,600,80,80);
 
         add(playButton);
         add(howToPlayButton);
         add(creditsButton);
         add(exitButton);
+        add(musicButton);
+        add(sfxButton);
     }
 
     // What font to use
@@ -113,7 +125,8 @@ public class MainMenu extends JPanel {
     public void setActionAndMouseListeners(){
         playButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				game.showCard("play");
+                soundmain.stop();
+                game.showCard("play");
 			}
         });
         
@@ -187,6 +200,44 @@ public class MainMenu extends JPanel {
             public void mouseReleased(MouseEvent e) {
                 exitButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/exit1.png"));
             }
+            public void mouseClicked(MouseEvent e){}
+	        public void mousePressed(MouseEvent e){}
+        });
+
+        musicButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music3.png"))
+                {
+                        musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music2.png"));
+                        //enabledMusic = false;
+                }
+                    
+                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music1.png"))
+                {
+                        musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music4.png"));
+                        //enabledMusic = true;
+                }
+			}
+        });
+        
+        musicButton.addMouseListener(new MouseListener() {
+            public void mouseEntered(MouseEvent e){
+                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music1.png")){
+                    musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music2.png"));
+                }
+                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music3.png")){
+                    musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music4.png"));
+                }
+            }
+            public void mouseExited(MouseEvent e) {
+                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music2.png")){
+                    musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music1.png"));
+                }
+                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music4.png")){
+                    musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music3.png"));
+                }
+            }
+            public void mouseReleased(MouseEvent e){}
             public void mouseClicked(MouseEvent e){}
 	        public void mousePressed(MouseEvent e){}
         });
