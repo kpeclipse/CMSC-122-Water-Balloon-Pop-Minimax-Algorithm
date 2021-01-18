@@ -1,6 +1,7 @@
 package game;
 
 import settings.HighScore;
+import settings.SoundClip;
 
 import java.awt.image.BufferedImage;
 import java.awt.GridLayout;
@@ -63,6 +64,9 @@ public class Play extends JPanel implements KeyListener{
     private boolean hold; // Necessary to avoid holding of key
     private boolean hitByBalloon;
     private boolean gameOver;
+
+    private SoundClip soundpop = new SoundClip(System.getProperty("user.dir") + "/resources/Balloon Pop.wav", 1);
+    private SoundClip soundcry = new SoundClip(System.getProperty("user.dir") + "/resources/Game Over Cry.wav", 1);
 
     // Constructor
     public Play(int width, int height, Game g){
@@ -498,8 +502,10 @@ public class Play extends JPanel implements KeyListener{
                     if ((balloon[balloonIndex].getBounds().intersects(player[1].getBounds()) && player[1].isVisible()) || freeFall > 605) {
                         visibleBalloon(balloonIndex + 3);
                         // If the balloon was popped
-                        if(freeFall < 605)
+                        if(freeFall < 605){
                             updateScore(balloonIndex);
+                            soundpop.start();
+                        }
 
                         // If the balloon was dodged
                         else{
@@ -513,7 +519,10 @@ public class Play extends JPanel implements KeyListener{
                             }
 
                             // If dodge limit has been reached
-                            else isGameOver(true);
+                            else{
+                                isGameOver(true);
+                                soundcry.start();
+                            }
                         }
 
                         flag = false;
@@ -522,6 +531,7 @@ public class Play extends JPanel implements KeyListener{
                     // If the player was hit by a balloon
                     else if((balloon[balloonIndex].getBounds().intersects(player[0].getBounds()) && balloon[balloonIndex].getY() > 425 && player[0].isVisible())){
                         visibleBalloon(balloonIndex + 3);
+                        soundcry.start();
                         hitByBalloon = true;
                         isGameOver(true);
                     }
