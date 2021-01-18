@@ -4,8 +4,6 @@ import settings.HighScore;
 import settings.SoundClip;
 
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontFormatException;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -36,19 +34,21 @@ public class MainMenu extends JPanel {
     private JButton musicButton;
     private JButton sfxButton;
 
+    private ImageIcon[] musicIcons;
+
     private SoundClip soundmain = new SoundClip(System.getProperty("user.dir") + "/resources/Main BG Music.wav", 0);
 
     public MainMenu(int width, int height, Game g){
         setSize(width, height);
         setLayout(null);
         setOpaque(false);
+
+        game =  g;
         
         showHighScore();
         setButtons();
         setBackground(System.getProperty("user.dir") + "/graphics/Main.png");
 
-        soundmain.start();
-        game =  g;
         setActionAndMouseListeners();
     }
 
@@ -64,9 +64,8 @@ public class MainMenu extends JPanel {
         JLabel highScoreLabel = new JLabel("High Score: " + Integer.toString(currentHighScore));
         highScoreLabel.setLocation(0, 0);
         highScoreLabel.setSize(220, 50);
-        highScoreLabel.setFont(useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 10));
+        highScoreLabel.setFont(game.useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 10));
         highScoreLabel.setForeground(Color.ORANGE);
-//        highscoreLabel.setHorizontalAlignment(JTextField.CENTER);
         highscorePanel.add(highScoreLabel);
     }
 
@@ -91,13 +90,13 @@ public class MainMenu extends JPanel {
         }
     }
 
-    public void setButtons(){
+    public void setButtons() {
         playButton = button(playButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/play1.png"));
         howToPlayButton = button(howToPlayButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/how1.png"));
         creditsButton = button(creditsButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/credits1.png"));
         exitButton = button(exitButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/exit1.png"));
-        musicButton = button(musicButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/music1.png"));
-        sfxButton = button(sfxButton, new ImageIcon(System.getProperty("user.dir") + "/graphics/sfx1.png"));
+        
+        audioSettings(game.music, game.sfx);
 
         playButton.setBounds(670, 380, 350, 50);
         howToPlayButton.setBounds(670, 430, 350, 50);
@@ -114,18 +113,57 @@ public class MainMenu extends JPanel {
         add(sfxButton);
     }
 
-    // What font to use
-    public Font useFont(String path, int size){
-        try {
-			return Font.createFont(Font.TRUETYPE_FONT, new File(path)).deriveFont(Font.PLAIN, size);
-		} catch (FontFormatException | IOException e) {e.printStackTrace();}
-		return null;
+    // whether a music should play or not
+    public void updateMusic(boolean State){
+        if (State) { // MUSIC IS ON
+            soundmain.start();
+            musicButton.setIcon(musicIcons[0]);
+        }
+
+        else { // MUSIC IS OFF
+            soundmain.stop();
+            musicButton.setIcon(musicIcons[2]);
+        }
+    }
+
+    // whether sound effects are on or not
+    public void updateSFX(boolean State){
+        if(State) // SFX IS ON
+            sfxButton.setIcon(musicIcons[4]);
+        else sfxButton.setIcon(musicIcons[6]); // SFX IS OFF
+    }
+
+    // initial music and sound settings
+    public void audioSettings(boolean music, boolean sfx){
+        setMusicIcons();
+        if(music == true) {
+            musicButton = button(musicButton, musicIcons[0]);
+            soundmain.start();
+        }
+        else {
+            musicButton = button(musicButton, musicIcons[2]);
+        }
+
+        if(sfx == true)
+            sfxButton = button(sfxButton, musicIcons[4]);
+        else sfxButton = button(sfxButton, musicIcons[6]);
+    }
+
+    // we need this so we can change the icon to be displayed on the music and sfx buttons
+    public void setMusicIcons(){
+        musicIcons = new ImageIcon[8];
+        for(int i = 0; i < musicIcons.length; i++){
+            if(i < 4)
+                musicIcons[i] = new ImageIcon(System.getProperty("user.dir") + "/graphics/music" + (i + 1) + ".png");
+            else musicIcons[i] = new ImageIcon(System.getProperty("user.dir") + "/graphics/sfx" + (i - 3) + ".png");
+        }
     }
 
     public void setActionAndMouseListeners(){
         playButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-                soundmain.stop();
+                if(game.music)
+                    soundmain.stop();
                 game.showCard("play");
 			}
         });
@@ -206,37 +244,77 @@ public class MainMenu extends JPanel {
 
         musicButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music3.png"))
-                {
-                        musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music2.png"));
-                        //enabledMusic = false;
+                if(musicButton.getIcon() == musicIcons[3]) {
+                    game.music = true;
+                    updateMusic(game.music);
+                    
                 }
                     
-                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music1.png"))
-                {
-                        musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music4.png"));
-                        //enabledMusic = true;
+                if(musicButton.getIcon() == musicIcons[1]) {
+                    game.music = false;
+                    updateMusic(game.music);
                 }
 			}
         });
         
         musicButton.addMouseListener(new MouseListener() {
             public void mouseEntered(MouseEvent e){
-                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music1.png")){
-                    musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music2.png"));
+                if(musicButton.getIcon() == musicIcons[0]) {
+                    musicButton.setIcon(musicIcons[1]);
                 }
-                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music3.png")){
-                    musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music4.png"));
+
+                if(musicButton.getIcon() == musicIcons[2]){
+                    musicButton.setIcon(musicIcons[3]);
                 }
             }
             public void mouseExited(MouseEvent e) {
-                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music2.png")){
-                    musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music1.png"));
+                if(musicButton.getIcon() == musicIcons[1]) {
+                    musicButton.setIcon(musicIcons[0]);
                 }
-                if(musicButton.getIcon() == new ImageIcon(System.getProperty("user.dir") + "/graphics/music4.png")){
-                    musicButton.setIcon(new ImageIcon(System.getProperty("user.dir") + "/graphics/music3.png"));
+
+                if(musicButton.getIcon() == musicIcons[3]){
+                    musicButton.setIcon(musicIcons[2]);
                 }
             }
+            public void mouseReleased(MouseEvent e){}
+            public void mouseClicked(MouseEvent e){}
+	        public void mousePressed(MouseEvent e){}
+        });
+
+        sfxButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+                if(game.sfx) {
+                    game.sfx = false;
+                    updateSFX(game.sfx);
+                    
+                }
+                else {
+                    game.sfx = true;
+                    updateSFX(game.sfx);
+                }
+			}
+        });
+        
+        sfxButton.addMouseListener(new MouseListener() {
+            public void mouseEntered(MouseEvent e){
+                if(sfxButton.getIcon() == musicIcons[4]) {
+                    sfxButton.setIcon(musicIcons[5]);
+                }
+
+                if(sfxButton.getIcon() == musicIcons[6]){
+                    sfxButton.setIcon(musicIcons[7]);
+                }
+            }
+            public void mouseExited(MouseEvent e) {
+                if(sfxButton.getIcon() == musicIcons[5]) {
+                    sfxButton.setIcon(musicIcons[4]);
+                }
+
+                if(sfxButton.getIcon() == musicIcons[7]){
+                    sfxButton.setIcon(musicIcons[6]);
+                }
+            }
+
             public void mouseReleased(MouseEvent e){}
             public void mouseClicked(MouseEvent e){}
 	        public void mousePressed(MouseEvent e){}

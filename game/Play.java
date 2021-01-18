@@ -7,7 +7,6 @@ import java.awt.image.BufferedImage;
 import java.awt.GridLayout;
 import java.awt.Font;
 import java.awt.Color;
-import java.awt.FontFormatException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
@@ -31,6 +30,7 @@ public class Play extends JPanel implements KeyListener{
     private Game game;
     private Fall fall;
     private MiniMax miniMax;
+    private VillainTravel move;
     private UmbrellaClose umbrella;
     private HighScore highScore;
 
@@ -75,6 +75,8 @@ public class Play extends JPanel implements KeyListener{
         setLayout(null);
         setOpaque(false);
 
+        game =  g;
+
         setVillain();
         setPanels();
         setTubes();
@@ -84,8 +86,6 @@ public class Play extends JPanel implements KeyListener{
 
         setBackground(System.getProperty("user.dir") + "/graphics/Play.png");
         addKeyListener(this);
-
-        game =  g;
     }
 
     // Game starts
@@ -103,7 +103,9 @@ public class Play extends JPanel implements KeyListener{
         drops = 1;
         visiblePlayer(0);
 
-        sound.start();
+        if(game.music) // if music is on
+            sound.start();
+
         Start();
     }
 
@@ -154,8 +156,10 @@ public class Play extends JPanel implements KeyListener{
             highScore.updateHighScore(score);
 
         if(state == true){
-            soundcry.start();
-            sound.stop();
+            if(game.sfx) // If sfx is on
+                soundcry.start();
+            if(game.music) // if music is on
+                sound.stop();
         }
     }
 
@@ -279,12 +283,12 @@ public class Play extends JPanel implements KeyListener{
 
     // Everything with JLabel
     public void setLabels(){
-        highScoreLabel = label(highScoreLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 40), Color.WHITE, null);
-        scoreLabel = label(scoreLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 40), Color.WHITE, Integer.toString(score));
-        dodgedBalloonsLabel = label(dodgedBalloonsLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 40), Color.WHITE, "0");
-        gameOverLabel = label(gameOverLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 60), Color.ORANGE, "GAME OVER!");
-        exitLabel = label(exitLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 20), Color.WHITE, "(Press ESC to exit)");
-        againLabel = label(againLabel, useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 20), Color.WHITE, "(Press ENTER to play again)");
+        highScoreLabel = label(highScoreLabel, game.useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 40), Color.WHITE, null);
+        scoreLabel = label(scoreLabel, game.useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 40), Color.WHITE, Integer.toString(score));
+        dodgedBalloonsLabel = label(dodgedBalloonsLabel, game.useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 40), Color.WHITE, "0");
+        gameOverLabel = label(gameOverLabel, game.useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 60), Color.ORANGE, "GAME OVER!");
+        exitLabel = label(exitLabel, game.useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 20), Color.WHITE, "(Press ESC to exit)");
+        againLabel = label(againLabel, game.useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 20), Color.WHITE, "(Press ENTER to play again)");
 
         showHighScore();
 
@@ -358,18 +362,21 @@ public class Play extends JPanel implements KeyListener{
         return theLabel;
     }
 
-    // What font to use
-    public Font useFont(String path, int size){
-        try {
-			return Font.createFont(Font.TRUETYPE_FONT, new File(path)).deriveFont(Font.PLAIN, size);
-		} catch (FontFormatException | IOException e) {e.printStackTrace();}
-		return null;
-    }
-
     public void BeforeVillainFall(){
-        try{
+        visibleBalloon(-1);
+        try {
             miniMax = new MiniMax("opponent");
-            visibleBalloon(-1);
+            
+            if(villain.getX() == 0)
+                villain.setBounds(player[0].getX(), 0, 250, 250);
+            
+            else move = new VillainTravel(miniMax.location);
+            
+            move.start();
+            Thread.sleep(200);
+        } catch (Exception e) {};
+        
+        try {
             miniMax.start();
             Thread.sleep(800);
         } catch (Exception e) {};
@@ -413,7 +420,7 @@ public class Play extends JPanel implements KeyListener{
 
         // If player wishes to play again when the game is over
         if (e.getKeyCode() == KeyEvent.VK_ENTER && gameOver == true) {
-            game.initial();
+            game.resetPlay();
             game.showCard("play");
         }
 
@@ -456,7 +463,7 @@ public class Play extends JPanel implements KeyListener{
         }
 
         // If player wants to end the game
-        if (e.getKeyCode() ==  KeyEvent.VK_END)
+        if (e.getKeyCode() ==  KeyEvent.VK_END && gameOverPanel.isVisible() == false)
             isGameOver(true);
 	}
 
@@ -508,7 +515,9 @@ public class Play extends JPanel implements KeyListener{
                     // If balloon was popped by the player or was dodged
                     if ((balloon[balloonIndex].getBounds().intersects(player[1].getBounds()) && player[1].isVisible()) || freeFall > 605) {
                         visibleBalloon(balloonIndex + 3);
-                        soundpop.start();
+                        
+                        if(game.sfx) // If sfx is on
+                            soundpop.start();
                         // If the balloon was popped
                         if(freeFall < 605){
                             updateScore(balloonIndex);
@@ -536,7 +545,6 @@ public class Play extends JPanel implements KeyListener{
                     // If the player was hit by a balloon
                     else if((balloon[balloonIndex].getBounds().intersects(player[0].getBounds()) && balloon[balloonIndex].getY() > 425 && player[0].isVisible())){
                         visibleBalloon(balloonIndex + 3);
-                        soundcry.start();
                         hitByBalloon = true;
                         isGameOver(true);
                     }
@@ -551,6 +559,7 @@ public class Play extends JPanel implements KeyListener{
         int[] balloonColumns = {160, 335, 510, 685};
         int time = 5;
         int freeFall = 170;
+        int location = getMin();
 
         String turn;
         boolean flag = true;
@@ -562,11 +571,9 @@ public class Play extends JPanel implements KeyListener{
         @Override
         public void run() {
             if(turn == "opponent") {
-                int location = getMin();
-
                 while (gameOver == false && flag == true){
-                    villain.setBounds(playerColumns[location], 0, 250, 250);
                     try {
+                        villain.setBounds(playerColumns[location], 0, 250, 250);
                         rock.setBounds(balloonColumns[location], freeFall, 45, 45);
                         Thread.sleep(35);
                         // THE PHYSICS IN THE FALLING ROCK
@@ -581,8 +588,9 @@ public class Play extends JPanel implements KeyListener{
     
                         if(freeFall > 750)
                             flag = false;
-                    } catch (Exception e) {}
+                    } catch (Exception e) { e.printStackTrace(); }
                 }
+                location = getMin();
             }
         }
 
@@ -618,6 +626,34 @@ public class Play extends JPanel implements KeyListener{
             } while (random == exclude);
 
             return playerColumns[random];
+        }
+    }
+    
+    class VillainTravel extends Thread{
+        int[] playerColumns = {50, 225, 400, 575};
+        int location;
+        int current = villain.getX();
+        
+        public VillainTravel(int location){
+            this.location = location;
+        }
+
+        @Override
+        public void run(){
+            while(gameOver == false && playerColumns[location] != current){
+                try {
+                    // must go to the right
+                    if (playerColumns[location] > current)
+                        current += 175;
+                
+                    // must go to the left        
+                    else if (playerColumns[location] < current)
+                        current -= 175;
+                    
+                    villain.setBounds(current, 0, 250, 250);
+                    Thread.sleep(50);
+                } catch (Exception e) { e.printStackTrace(); };
+            }
         }
     }
     
