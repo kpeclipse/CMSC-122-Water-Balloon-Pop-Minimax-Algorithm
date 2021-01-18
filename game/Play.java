@@ -389,7 +389,7 @@ public class Play extends JPanel implements KeyListener{
             
             fall.start();
 
-            Thread.sleep(1000);;
+            Thread.sleep(1300);;
 		} catch(Exception e){e.printStackTrace();}
 	}
 
@@ -563,7 +563,7 @@ public class Play extends JPanel implements KeyListener{
                     villain.setBounds(playerColumns[location], 0, 250, 250);
                     try {
                         rock.setBounds(balloonColumns[location], freeFall, 45, 45);
-                        Thread.sleep(30);
+                        Thread.sleep(35);
                         // THE PHYSICS IN THE FALLING ROCK
                         freeFall += 2 * time;
                         if(time < 30){
