@@ -19,8 +19,9 @@ public class HighScore {
             
             while((line = bufferedReader.readLine()) != null) {
 				number = Integer.valueOf(line);
-            }
-            
+			}
+			
+            bufferedReader.close();
 		} catch(IOException ioException) { ioException.printStackTrace(); }
     }
     

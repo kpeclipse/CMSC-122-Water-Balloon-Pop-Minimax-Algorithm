@@ -8,6 +8,7 @@ import java.io.IOException;
 import javax.swing.JFrame;
 
 public class Game extends JFrame{
+    private static final long serialVersionUID = -2657183267005854109L;
     protected static int width = 1200, height = 725;
     
     private MainMenu mainMenu;
@@ -19,11 +20,11 @@ public class Game extends JFrame{
     private CardLayout layout = new CardLayout();
 
     protected boolean music = true;
-    protected boolean sfx = true;
-
+    protected boolean sfx = true;   
+    
     public static void main(String[] args) {
-        new Game();
-    }   
+		new Game();
+    }
     
     public Game() {
         super("WATER BALLOON POP! (Version 2)");

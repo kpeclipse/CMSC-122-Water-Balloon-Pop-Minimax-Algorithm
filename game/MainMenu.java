@@ -20,6 +20,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
 
 public class MainMenu extends JPanel {
+    private static final long serialVersionUID = -2657183267005854109L;
+    
     private File file;
     private BufferedImage image;
 

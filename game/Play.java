@@ -22,6 +22,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class Play extends JPanel implements KeyListener{
+    private static final long serialVersionUID = -2657183267005854109L;
+    private final int[] playerColumns = {50, 225, 400, 575};
+    private final int[] balloonColumns = {160, 335, 510, 685}; 
+    
     // So many global variables :<
     private File file;
     private BufferedImage image;
@@ -57,7 +61,6 @@ public class Play extends JPanel implements KeyListener{
     private JLabel[] balloon = new JLabel[6];
 
     private int score;
-    private int drops;
     private int dodgedBalloons;
     private int DELTA; // Necessary when changing a particular column
 
@@ -100,7 +103,6 @@ public class Play extends JPanel implements KeyListener{
         // player in certain position
         hold = false;
         DELTA = 400;
-        drops = 1;
         visiblePlayer(0);
 
         if(game.music) // if music is on
@@ -111,12 +113,25 @@ public class Play extends JPanel implements KeyListener{
 
     // Starts the falling of Balloons
     public void Start() {
-        Timer timer = new Timer("Timer");
-        
-        if(gameOver == false){
+        if(gameOver == false) {
+            Timer timer = new Timer("Timer");
             TimerTask task = new TimerTask() {
+                int drop = 1;
                 public void run() {
-                    if(drops <= 10) {
+                    if(drop < 10) {
+                        // Villain is about to show up
+                        switch(drop){
+                            case 7:
+                                villain.setBounds(925, 470, 250, 250);
+                                break;
+                            case 8:
+                                villain.setBounds(720, 200, 250, 250);
+                                break;
+                            case 9:
+                                villain.setBounds(playerColumns[2], 0, 250, 250);
+                                break;
+                        }
+                    
                         BeforeFall(0);
                     }
     
@@ -124,13 +139,12 @@ public class Play extends JPanel implements KeyListener{
                         BeforeVillainFall();
                         
                         Random r = new Random();
-                        int randomColor = r.nextInt(3);
+                        int randomColor = r.nextInt(3); // change in color of balloon
 
                         BeforeFall(randomColor);
                     }
-    
-                    drops += 1;
-                    // System.out.println("drops = " + drops);
+
+                    drop += 1;
                 }
             };
     
@@ -218,8 +232,7 @@ public class Play extends JPanel implements KeyListener{
 
     public void showHighScore(){
         highScore = new HighScore();
-        int hScore = highScore.showHighScore();
-        highScoreLabel.setText(Integer.toString(hScore));
+        highScoreLabel.setText(Integer.toString(highScore.showHighScore()));
     }
     
     // Updates how many balloons were dodged
@@ -259,7 +272,7 @@ public class Play extends JPanel implements KeyListener{
         dodgedBalloonsPanel = panel(dodgedBalloonsPanel, 885, 350, 265, 75, new GridLayout(1,1));
         gameOverPanel = panel(gameOverPanel, 85, 265, 800, 75, new GridLayout(1,1));
         choicePanel = panel(choicePanel, 85, 375, 800, 50, new GridLayout(2,1));
-        tubePanel = panel(playerPanel, 115, 0, 655, 75, null);
+        tubePanel = panel(tubePanel, 115, 0, 655, 75, null);
 
         add(gameOverPanel);
         add(choicePanel);
@@ -363,16 +376,15 @@ public class Play extends JPanel implements KeyListener{
     }
 
     public void BeforeVillainFall(){
-        visibleBalloon(-1);
+        if(!gameOver)
+            visibleBalloon(-1);
+        
         try {
             miniMax = new MiniMax("opponent");
-            
-            if(villain.getX() == 0)
-                villain.setBounds(player[0].getX(), 0, 250, 250);
-            
-            else move = new VillainTravel(miniMax.location);
-            
+
+            move = new VillainTravel(miniMax.location);
             move.start();
+
             Thread.sleep(200);
         } catch (Exception e) {};
         
@@ -483,7 +495,6 @@ public class Play extends JPanel implements KeyListener{
 
     // Everything that happens in a falling balloon
     class Fall extends Thread {
-        int[] column = {160, 335, 510, 685};
         int columnIndex;
         int balloonIndex = 1;
         int time = 5;
@@ -502,8 +513,8 @@ public class Play extends JPanel implements KeyListener{
             while(gameOver == false && flag == true) {
                 try {
                     visibleBalloon(balloonIndex);
-                    balloon[balloonIndex].setBounds(column[columnIndex], freeFall, 61, 90);
-                    balloon[balloonIndex + 3].setBounds(column[columnIndex], freeFall, 61, 90);
+                    balloon[balloonIndex].setBounds(balloonColumns[columnIndex], freeFall, 61, 90);
+                    balloon[balloonIndex + 3].setBounds(balloonColumns[columnIndex], freeFall, 61, 90);
                     
                     // THE PHYSICS IN THE FALLING BALLOON YESSSS
                     Thread.sleep(20);
@@ -555,8 +566,6 @@ public class Play extends JPanel implements KeyListener{
     }
 
     class MiniMax extends Thread{
-        int[] playerColumns = {50, 225, 400, 575};
-        int[] balloonColumns = {160, 335, 510, 685};
         int time = 5;
         int freeFall = 170;
         int location = getMin();
@@ -630,7 +639,6 @@ public class Play extends JPanel implements KeyListener{
     }
     
     class VillainTravel extends Thread{
-        int[] playerColumns = {50, 225, 400, 575};
         int location;
         int current = villain.getX();
         
