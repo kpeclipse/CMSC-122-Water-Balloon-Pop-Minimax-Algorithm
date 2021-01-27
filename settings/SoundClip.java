@@ -4,7 +4,6 @@ import java.io.*;
 import javax.sound.sampled.*;
 
 public class SoundClip{
-	//private URL url;
 	private Clip clip;
 	private final String filename;
 	private final int identifier;

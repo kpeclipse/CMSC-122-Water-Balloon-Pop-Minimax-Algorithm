@@ -11,8 +11,10 @@ public class HighScore {
     private int number;
     private String line;
 
-	public HighScore(){
-        try {
+	public HighScore(){}
+    
+    public int showHighScore(){
+		try {
 			File file = new File(System.getProperty("user.dir") + "/resources/High Score.txt");
 			FileReader fileReader = new FileReader(file);
 			BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -23,9 +25,7 @@ public class HighScore {
 			
             bufferedReader.close();
 		} catch(IOException ioException) { ioException.printStackTrace(); }
-    }
-    
-    public int showHighScore(){
+		
         return number;
     }
 

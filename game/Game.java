@@ -36,12 +36,12 @@ public class Game extends JFrame{
 
     // First thing to do when game starts running
     public void initial(){
-        mainMenu = new MainMenu(width, height, this);   // The Main Menu panel
+        resetMain();
+
         howToPlay = new HowToPlay(width, height, this); // The How to Play panel
         credits = new Credits(width, height, this); // The Credits panel
         exit = new Exit(width, height, this);   // The Exit panel
 
-        add("main", mainMenu);
         add("how", howToPlay);
         add("credits", credits);
         add("exit", exit);
@@ -58,11 +58,20 @@ public class Game extends JFrame{
             play.requestFocusInWindow(); // This is for the Key Listener to work
             play.initial();
         }
+        
+        if(card == "main") {
+            mainMenu.updateHighScore();
+        }
     }
     
     public void resetPlay(){
         play = new Play(width, height, this);   //  The Play panel (where the game happens)
         add("play", play);
+    }
+
+    public void resetMain(){
+        mainMenu = new MainMenu(width, height, this); // The Main Menu panel
+        add("main", mainMenu);
     }
 
     // JFrame Settings

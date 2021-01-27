@@ -2,6 +2,7 @@ package game;
 
 import settings.HighScore;
 import settings.SoundClip;
+import settings.GameImagePanel;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -38,6 +39,8 @@ public class MainMenu extends JPanel {
 
     private ImageIcon[] musicIcons;
 
+    private int currentHighScore;
+
     private SoundClip soundmain = new SoundClip(System.getProperty("user.dir") + "/resources/Main BG Music.wav", 0);
 
     public MainMenu(int width, int height, Game g){
@@ -56,7 +59,7 @@ public class MainMenu extends JPanel {
 
     public void showHighScore(){
         highScore = new HighScore();
-        int currentHighScore = highScore.showHighScore();
+        updateHighScore();
 
         JPanel highscorePanel = new JPanel();
         highscorePanel.setBounds(670, 335, 350, 50);
@@ -69,6 +72,10 @@ public class MainMenu extends JPanel {
         highScoreLabel.setFont(game.useFont(System.getProperty("user.dir") + "/graphics/Emulogic.ttf", 10));
         highScoreLabel.setForeground(Color.ORANGE);
         highscorePanel.add(highScoreLabel);
+    }
+
+    public void updateHighScore(){
+        currentHighScore = highScore.showHighScore();
     }
 
     public JButton button(JButton theButton, ImageIcon icon) {
